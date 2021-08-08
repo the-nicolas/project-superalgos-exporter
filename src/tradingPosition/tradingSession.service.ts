@@ -6,7 +6,6 @@ import * as dt from 'directory-tree';
 import * as Xbytes from 'xbytes';
 import * as Si from 'systeminformation';
 import * as Shell from 'shelljs';
-import * as diskusage from 'diskusage';
 import { ConfigService } from '@nestjs/config';
 
 export interface SATradingPosition {
@@ -58,7 +57,7 @@ export class TradingSessionService {
   }
 
   private assignPosition(raw: (string | number)[]) {
-    console.log('RAW', raw);
+    // console.log('RAW', raw);
     const pos = _.findIndex(this.positions, {
       serial: <number>raw[0],
       uuid: <string>raw[1],
@@ -210,7 +209,7 @@ export class TradingSessionService {
   }
 
   aggrPos(pos: SATradingPosition): SAAggrTradingPosition {
-    console.log(pos);
+    // console.log(pos);
     const ret = <SAAggrTradingPosition>{
       uuid: pos.uuid,
       serial: pos.serial,
@@ -411,12 +410,16 @@ plotchar(percRate, "% Rate", "", location.top, size = size.tiny, editable=false)
   }
 
   buildPinePositions(data: SAAggrTradingPosition[]): string {
-    let ret = '';
 
+    // Filter positions without begin AND end
+    data = data.filter(act => act.beginDate !== undefined && act.endDate !== undefined);
+    // Sort by serial
+    data.sort((a, b) => a.serial - b.serial);
+
+    let ret = '';
     for (let i = 0; i < data.length; i++) {
-      ret += `p(${data[i].serial}, "${data[i].beginDate || ''}", "${
-        data[i].endDate || ''
-      }", ${data[i].beginRate || 0}, ${data[i].endRate || 0})\n`;
+      ret += `p(${data[i].serial}, "${data[i].beginDate || ''}", "${data[i].endDate || ''
+        }", ${data[i].beginRate || 0}, ${data[i].endRate || 0})\n`;
     }
     return ret;
   }
@@ -437,8 +440,10 @@ plotchar(percRate, "% Rate", "", location.top, size = size.tiny, editable=false)
       pair,
       session,
     );
-    console.log(sessionData);
+    // console.log(sessionData);
     const aggrPos = sessionData.map(this.aggrPos);
     return this.getPineScript(this.buildPinePositions(aggrPos)) + '\n';
   }
 }
+
+
